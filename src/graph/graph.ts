@@ -1,38 +1,14 @@
-import { AutoIncrement } from './utils/autoincrement';
-import { shallowEq } from './utils/shallow';
+import { AutoIncrement } from '../utils/autoincrement';
+import { shallowEq } from '../utils/shallow';
 
-export type NodeValue = Record<string, any>;
-
-export type EdgeValue = Record<string, any>;
-
-export interface Adjacency {
-  _id: number;
-  start: number;
-  end: number;
-}
-
-export interface NodeRecord {
-  _id: number;
-  properties: any;
-}
-
-export interface EdgeRecord {
-  _id: number;
-  start: number;
-  end: number;
-  properties: any;
-}
-
-
-export interface GetNodeCb {
-  (item: NodeRecord): boolean;
-}
-
-export type SearchResult = [
+import {
+  Adjacency,
+  EdgeValue,
+  GetNodeCb,
   NodeRecord,
-  NodeRecord,
-  EdgeRecord,
-]
+  NodeValue,
+  SearchResult,
+} from './types';
 
 export class Graph {
   #nodes = new Map<number, NodeValue>();
@@ -121,6 +97,7 @@ export class Graph {
   }
 }
 
+/* example */
 const graph = new Graph();
 
 const a = graph.addNode({ key: 'A' });

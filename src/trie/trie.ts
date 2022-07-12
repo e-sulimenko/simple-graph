@@ -1,4 +1,4 @@
-import { Graph } from './graph';
+import { Graph } from '../graph/graph';
 
 class Trie {
   #graph = new Graph();
