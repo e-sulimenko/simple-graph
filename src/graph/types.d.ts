@@ -1,6 +1,6 @@
-export type NodeValue = Record<string, any>;
+export type INode = Record<string, any>;
 
-export type EdgeValue = Record<string, any>;
+export type IEdge = Record<string, any>;
 
 export interface Adjacency {
   _id: number;
@@ -8,16 +8,16 @@ export interface Adjacency {
   end: number;
 }
 
-export interface NodeRecord {
+export interface NodeRecord<Node = unknown> {
   _id: number;
-  properties: any;
+  properties: Node;
 }
 
-export interface EdgeRecord {
+export interface EdgeRecord<Edge = unknown> {
   _id: number;
   start: number;
   end: number;
-  properties: any;
+  properties: Edge;
 }
 
 
@@ -25,8 +25,8 @@ export interface GetNodeCb {
   (item: NodeRecord): boolean;
 }
 
-export type SearchResult = [
-  NodeRecord,
-  NodeRecord,
-  EdgeRecord,
+export type SearchResult<Node = unknown, Edge = unknown> = [
+  NodeRecord<Node>,
+  NodeRecord<Node>,
+  EdgeRecord<Edge>,
 ]

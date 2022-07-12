@@ -3,29 +3,34 @@ import { shallowEq } from '../utils/shallow';
 
 import {
   Adjacency,
-  EdgeValue,
+  IEdge,
   GetNodeCb,
   NodeRecord,
-  NodeValue,
+  INode,
   SearchResult,
 } from './types';
 
-export class Graph {
-  private readonly _nodes = new Map<number, NodeValue>();
-  private readonly _edges = new Map<number, EdgeValue>();
+export class Graph<
+  NodeValue extends INode,
+  EdgeValue extends IEdge,
+  Node = Record<keyof NodeValue, NodeValue[keyof NodeValue]>,
+  Edge = Record<keyof EdgeValue, EdgeValue[keyof EdgeValue]>,
+  > {
+  private readonly _nodes = new Map<number, Node>();
+  private readonly _edges = new Map<number, Edge>();
   private readonly _adjacency = new Map<number, Adjacency[]>();
 
   private readonly _nodeIdGen = AutoIncrement();
   private readonly _edgeIdGen = AutoIncrement();
 
-  addNode(value: NodeValue): number {
+  addNode(value: Node): number {
     if (value == null) throw new Error('Node value is required');
     const { value: nodeId } = this._nodeIdGen.next();
     this._nodes.set(nodeId, value);
     return nodeId;
   }
 
-  addRelation(start: number, end: number, value: EdgeValue = {}): void {
+  addRelation(start: number, end: number, value: Edge = {} as Edge): void {
     if (
       this._nodes.has(start)
       && this._nodes.has(end)
@@ -54,31 +59,33 @@ export class Graph {
     return Object.fromEntries(this._edges.entries());
   }
 
-  getNode(fn: GetNodeCb): NodeRecord | void {
+  getNode(fn: GetNodeCb): NodeRecord<Node> | null {
     for (const [key, properties] of this._nodes) {
       const item = { _id: key, properties };
       if (fn(item)) return item;
     }
+    return null;
   }
 
-  getNodeByKey(key: number): NodeRecord | void {
+  getNodeByKey(key: number): NodeRecord | null {
     const node = this._nodes.get(key);
     if (node != null) {
       return { _id: key, properties: node };
     }
+    return null;
   }
 
-  updateNodeByKey(key: number, values: NodeValue): void {
+  updateNodeByKey(key: number, values: Partial<Node>): void {
     const node = this._nodes.get(key);
     if (node != null) Object.assign(node, values);
   }
 
-  breadthFirstSearch(key: number, edgeWhere?: EdgeValue): SearchResult[] {
+  breadthFirstSearch(key: number, edgeWhere?: Edge): SearchResult<Node, Edge>[] {
     const checked: Record<number, boolean> = { [key]: true }
 
     const adjacency = [...(this._adjacency.get(key) ?? [])];
 
-    const result: SearchResult[] = [];
+    const result: SearchResult<Node, Edge>[] = [];
 
     for (let i = 0; i < adjacency.length; i += 1) {
       let { start, end, _id: edgeId } = adjacency[i];
@@ -94,11 +101,13 @@ export class Graph {
         const endNode = this._nodes.get(end);
         const startNode = this._nodes.get(start);
 
-        result.push([
-          { _id: start, properties: startNode },
-          { _id: end, properties: endNode },
-          { _id: edgeId, start, end, properties: edge },
-        ]);
+        if (endNode != null && startNode != null) {
+          result.push([
+            { _id: start, properties: startNode },
+            { _id: end, properties: endNode },
+            { _id: edgeId, start, end, properties: edge },
+          ]);
+        }
 
         const newAdj = this._adjacency.get(end);
         if (newAdj != null) adjacency.push(...newAdj);

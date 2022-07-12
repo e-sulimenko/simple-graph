@@ -1,7 +1,8 @@
 import { Graph } from '../graph/graph';
+import { IEdge, INode } from './types';
 
 class Trie {
-  private readonly _graph = new Graph();
+  private readonly _graph = new Graph<INode, IEdge>();
 
   private readonly _rootId = this._graph.addNode({ char: '#', isKey: false });
 
