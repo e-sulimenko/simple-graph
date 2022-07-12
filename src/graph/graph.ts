@@ -23,11 +23,11 @@ export class Graph<
   private readonly _nodeIdGen = AutoIncrement();
   private readonly _edgeIdGen = AutoIncrement();
 
-  addNode(value: Node): number {
+  addNode(value: Node): NodeRecord<Node> {
     if (value == null) throw new Error('Node value is required');
     const { value: nodeId } = this._nodeIdGen.next();
     this._nodes.set(nodeId, value);
-    return nodeId;
+    return { _id: nodeId, properties: value };
   }
 
   addRelation(start: number, end: number, value: Edge = {} as Edge): void {
@@ -59,7 +59,7 @@ export class Graph<
     return Object.fromEntries(this._edges.entries());
   }
 
-  getNode(fn: GetNodeCb): NodeRecord<Node> | null {
+  getNode(fn: GetNodeCb<Node>): NodeRecord<Node> | null {
     for (const [key, properties] of this._nodes) {
       const item = { _id: key, properties };
       if (fn(item)) return item;
@@ -67,7 +67,7 @@ export class Graph<
     return null;
   }
 
-  getNodeByKey(key: number): NodeRecord | null {
+  getNodeByKey(key: number): NodeRecord<Node> | null {
     const node = this._nodes.get(key);
     if (node != null) {
       return { _id: key, properties: node };
@@ -119,7 +119,7 @@ export class Graph<
 }
 
 /* example */
-const graph = new Graph();
+const graph = new Graph<{ key: string }, { weight: number }>();
 
 const a = graph.addNode({ key: 'A' });
 const b = graph.addNode({ key: 'B' });
@@ -128,10 +128,10 @@ const d = graph.addNode({ key: 'D' });
 const e = graph.addNode({ key: 'E' });
 const f = graph.addNode({ key: 'F' });
 
-graph.addRelation(a, b, { weight: 5 });
-graph.addRelation(a, c, { weight: 5 });
-graph.addRelation(a, d, { weight: 10 });
-graph.addRelation(c, d, { weight: 5 });
-graph.addRelation(d, f, { weight: 10 });
-
+graph.addRelation(a._id, b._id, { weight: 5 });
+graph.addRelation(a._id, c._id, { weight: 5 });
+graph.addRelation(a._id, d._id, { weight: 10 });
+graph.addRelation(c._id, d._id, { weight: 5 });
+graph.addRelation(d._id, f._id, { weight: 10 });
+graph.getNode((item) => item.properties.key == null)
 // console.log(JSON.stringify(graph.breadthFirstSearch(a, { weight: 5 }), null, 2));

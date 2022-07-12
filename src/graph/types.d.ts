@@ -21,8 +21,8 @@ export interface EdgeRecord<Edge = unknown> {
 }
 
 
-export interface GetNodeCb {
-  (item: NodeRecord): boolean;
+export interface GetNodeCb<Node = unknown> {
+  (item: NodeRecord<Node>): boolean;
 }
 
 export type SearchResult<Node = unknown, Edge = unknown> = [
