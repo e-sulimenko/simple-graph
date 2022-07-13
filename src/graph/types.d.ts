@@ -30,3 +30,8 @@ export type SearchResult<Node = unknown, Edge = unknown> = [
   NodeRecord<Node>,
   EdgeRecord<Edge>,
 ]
+
+export interface WhereOptions<Node, Edge> {
+  node?: Node,
+  edge?: Edge,
+}

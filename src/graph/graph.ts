@@ -8,6 +8,7 @@ import {
   NodeRecord,
   INode,
   SearchResult,
+  WhereOptions,
 } from './types';
 
 export class Graph<
@@ -69,10 +70,8 @@ export class Graph<
 
   getNodeByKey(key: number): NodeRecord<Node> | null {
     const node = this._nodes.get(key);
-    if (node != null) {
-      return { _id: key, properties: node };
-    }
-    return null;
+    if (node == null) return null;
+    return { _id: key, properties: node };
   }
 
   updateNodeByKey(key: number, values: Partial<Node>): void {
@@ -80,7 +79,22 @@ export class Graph<
     if (node != null) Object.assign(node, values);
   }
 
-  breadthFirstSearch(key: number, edgeWhere?: Edge): SearchResult<Node, Edge>[] {
+  getCloseNodes(key: number, where?: Node): NodeRecord<Node>[] | null {
+    const adj = this._adjacency.get(key);
+    if (adj == null) return null;
+    return adj.reduce((acc, item) => {
+      const node = this._nodes.get(item.end);
+      if (
+        node != null
+        && (where == null || shallowEq(node, where))
+      ) {
+        acc.push({_id: item.end, properties: node});
+      }
+      return acc;
+    }, [] as NodeRecord<Node>[]);
+  }
+
+  breadthFirstSearch(key: number, where: WhereOptions<Node, Edge> = {}): SearchResult<Node, Edge>[] {
     const checked: Record<number, boolean> = { [key]: true }
 
     const adjacency = [...(this._adjacency.get(key) ?? [])];
@@ -96,21 +110,25 @@ export class Graph<
       const edge = this._edges.get(edgeId);
       if (
         edge != null
-        && (edgeWhere == null || shallowEq(edge, edgeWhere))
+        && (where.edge == null || shallowEq(edge, where.edge))
       ) {
         const endNode = this._nodes.get(end);
         const startNode = this._nodes.get(start);
 
-        if (endNode != null && startNode != null) {
+        if (
+          endNode != null
+          && startNode != null
+          && (where.node == null || shallowEq(endNode, where.node))
+        ) {
           result.push([
             { _id: start, properties: startNode },
             { _id: end, properties: endNode },
             { _id: edgeId, start, end, properties: edge },
           ]);
-        }
 
-        const newAdj = this._adjacency.get(end);
-        if (newAdj != null) adjacency.push(...newAdj);
+          const newAdj = this._adjacency.get(end);
+          if (newAdj != null) adjacency.push(...newAdj);
+        }
       }
     }
 
@@ -134,4 +152,4 @@ graph.addRelation(a._id, d._id, { weight: 10 });
 graph.addRelation(c._id, d._id, { weight: 5 });
 graph.addRelation(d._id, f._id, { weight: 10 });
 graph.getNode((item) => item.properties.key == null)
-// console.log(JSON.stringify(graph.breadthFirstSearch(a, { weight: 5 }), null, 2));
+// console.log(JSON.stringify(graph.breadthFirstSearch(a._id, { edge: { weight: 5 }, node: { key: 'B' } }), null, 2));

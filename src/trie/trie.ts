@@ -14,7 +14,7 @@ class Trie {
 
     for (let i = 0; i < chars.length; i += 1) {
       const char = chars[i];
-      const [record] = this._graph.breadthFirstSearch(node._id, { to: char });
+      const [record] = this._graph.breadthFirstSearch(node._id, { edge: { to: char } });
       if (record == null) {
         const nextNode = this._graph.addNode({ char, isKey: false });
         this._graph.addRelation(node._id, nextNode._id, { to: char });
@@ -37,7 +37,7 @@ class Trie {
     // check if prefix exists
     for (let i = 0; i < chars.length; i += 1) {
       const char = chars[i];
-      const [record] = this._graph.breadthFirstSearch(node._id, { to: char });
+      const [record] = this._graph.breadthFirstSearch(node._id, { edge: { to: char } });
       if (record == null) break;
       node = record[1];
     }
@@ -47,15 +47,25 @@ class Trie {
       keys.push(prefix);
     }
 
-    // TODO need graph depth first search
-    console.log(node);
+    this.recursiveSearch(prefix, node._id, keys);
+    return keys;
   };
+
+  private recursiveSearch(str: string, nodeId: number, keys: string[]): void {
+    const closeNodes = this._graph.getCloseNodes(nodeId);
+    closeNodes?.forEach((node) => {
+      const newStr = `${str}${node.properties.char}`;
+      if (node.properties.isKey) keys.push(newStr);
+      this.recursiveSearch(newStr, node._id, keys);
+    });
+  }
 }
 
 const trie = new Trie();
 
+trie.addKey('a');
 trie.addKey('apple');
 trie.addKey('banana');
 trie.addKey('barbarian');
 
-trie.getKeysByPrefix('app');
+// console.log(trie.getKeysByPrefix('a'));
